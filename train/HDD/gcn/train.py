@@ -14,7 +14,8 @@ sys.path.insert(0, '../../../')
 import config as cfg
 import utils as utl
 from datasets import GCNDataLayer as DataLayer
-from models import GCN as Model
+from models.gcn import GCN as Model
+import pdb
 
 def to_device(x, device):
     return x.to(device)#.transpose(0,1)
@@ -29,8 +30,8 @@ if __name__ == '__main__':
     parser.add_argument('--inputs', default='camera', type=str)
     parser.add_argument('--cause', default='crossing_pedestrian', type=str)
     parser.add_argument('--gpu', default='0, 1', type=str)
-    parser.add_argument('--epochs', default=100, type=int)
-    parser.add_argument('--batch_size', default=4, type=int)
+    parser.add_argument('--epochs', default=20, type=int)
+    parser.add_argument('--batch_size', default=8, type=int)
     parser.add_argument('--lr', default=5e-04, type=float)
     parser.add_argument('--weight_decay', default=5e-04, type=float)
     parser.add_argument('--num_workers', default=4, type=int)
@@ -39,10 +40,11 @@ if __name__ == '__main__':
     parser.add_argument('--data_augmentation', default= True, type=bool)
     parser.add_argument('--dist', default=False, type=bool)
     parser.add_argument('--fusion', default='attn',choices=['avg', 'gcn', 'attn'], type=str)
+    parser.add_argument('--topology-info-file',type=str, default='/home/zxiao/data/dataset/topology_info_w_go_straight.json')
 
 
     args = cfg.parse_args(parser)
-
+    print(args.cause)
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth'
@@ -82,8 +84,10 @@ if __name__ == '__main__':
 for epoch in range(1, args.epochs+1):
         data_sets = {
             phase: DataLayer(
+                args = args,
                 data_root=args.data_root,
                 cause=args.cause,
+                phase=phase,
                 sessions=getattr(args, phase+'_session_set'),
                 camera_transforms = camera_transforms,
                 time_steps=args.time_steps,
@@ -92,7 +96,8 @@ for epoch in range(1, args.epochs+1):
             )
             for phase in args.phases
         }
-
+        # sample = data_sets['train'][0]
+        # pdb.set_trace()
         data_loaders = {
             phase: data.DataLoader(
                 data_sets[phase],

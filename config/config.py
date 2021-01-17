@@ -2,6 +2,7 @@ import os.path as osp
 from collections import OrderedDict
 import socket
 import getpass
+import pdb
 machine_name = socket.gethostname()
 username = getpass.getuser()
 
@@ -24,6 +25,8 @@ def parse_args(parser):
         args.data_root = '/home/cli/hdd'
     elif 'sm120145' in machine_name and username == 'cli':  # TODO Titan P100 @ 8
         args.data_root = '/data1/hdd'
+    elif 'sv802681lx' in machine_name and username == 'zxiao':
+        args.data_root = '/home/zxiao/data/hdd'
     else:
         exit("INVALID USER: %s@%s" % (username, machine_name))
 
@@ -31,6 +34,7 @@ def parse_args(parser):
         args.data = 'HDD'
     args.class_index = list(data_info[args.data]['class_info'].keys())
     args.class_weight = list(data_info[args.data]['class_info'].values())
+    args.intention_index = list(data_info[args.data]['intention_info'].keys())
     args.train_session_set = data_info[args.data]['train_session_set']
     args.test_session_set = data_info[args.data]['test_session_set']
     args.num_classes = len(args.class_index)
@@ -38,8 +42,8 @@ def parse_args(parser):
 
 data_info = OrderedDict()
 data_info['HDD'] = OrderedDict()
-'''
-data_info['HDD']['class_info'] = OrderedDict([
+
+data_info['HDD']['intention_info'] = OrderedDict([
     ('background',               1.0),
     ('intersection passing',     1.0),
     ('left turn',                1.0),
@@ -53,7 +57,7 @@ data_info['HDD']['class_info'] = OrderedDict([
     ('merge',                    1.0),
     ('U-turn',                   1.0),
 ])
-'''
+
 data_info['HDD']['class_info'] = OrderedDict([
     ('go',               1.0),
     ('stop',     1.0),

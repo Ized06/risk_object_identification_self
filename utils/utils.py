@@ -18,8 +18,8 @@ def compute_result(class_index, score_metrics, target_metrics, result_path, resu
     pred_metrics = np.argmax(score_metrics, axis=1)
     target_metrics = np.array(target_metrics)
 
-    print(pred_metrics)
-    print(target_metrics)
+    # print(pred_metrics)
+    # print(target_metrics)
     # Compute ACC
     correct = np.sum((target_metrics!=0)&(target_metrics==pred_metrics))
     total = np.sum(target_metrics!=0)
@@ -48,8 +48,10 @@ def compute_result(class_index, score_metrics, target_metrics, result_path, resu
 
     # Save
     if save:
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
         with open(os.path.join(result_path, result_name), 'w') as f:
-            json.dump(result, f)
+            json.dump(result, f,indent=4)
         if verbose:
             print('Saved the result to {}'.format(os.path.join(result_path, result_name)))
 

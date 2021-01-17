@@ -1,0 +1,9 @@
+train/HDD/gcn/snapshots
+train/HDD/gcn/results
+*.pyc
+__pycache__/
+*/__pycache__/
+*/*.pyc
+*/**/*.pyc
+*/**/**/*.pyc
+*/**/**/**/*.pyc

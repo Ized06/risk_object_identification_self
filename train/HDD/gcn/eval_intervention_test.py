@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, '../../../')
 import config as cfg
 import utils as utl
-from models import GCN as Model
+from models.gcn import GCN as Model
+import pdb
 
 from utils.bounding_box_utils import iou
 
@@ -40,6 +41,10 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+    dir_name = os.path.dirname(args.model)
+    model_basename = os.path.basename(args.model)
+    print(dir_name)
+    print(model_basename)
     model = Model(args.inputs, partialConv = args.partial_conv,fusion = args.fusion).to(device)
     state_dict = torch.load(args.model)
     state_dict_copy = {}
@@ -143,7 +148,7 @@ if __name__ == '__main__':
 
         all_test = f.readlines()
     all_test = [x.strip() for x in all_test]
-
+    print("Cause: {}, length: {}".format(args.cause,len(all_test)))
     accumIOU = 0.
     Accs = np.zeros(10)
     threshHolds = np.arange(0.5, 1.0, 0.05)
@@ -188,7 +193,7 @@ if __name__ == '__main__':
             for l in range(st, et, time_sample):
 
                 camera_name = 'output{}.png'.format(str(l-1 + start_time))
-                camera_path = osp.join('/home/cli/sm120145_data/HDD/ScaleAPI_Cause/Cause_images', folder, camera_name)
+                camera_path = osp.join('/home/zxiao/data/ROI/roi_test', folder, camera_name)
                 camera_inputs.append(Image.open(camera_path).convert('RGB'))  # save for later usage in intervention
 
                 camera_input = camera_transforms(Image.open(camera_path).convert('RGB'))
@@ -217,6 +222,7 @@ if __name__ == '__main__':
                 feature_input = feature_input.view(-1, 1280)
 
                 hx, cx = model.step(feature_input, hx, cx)
+                pdb.set_trace()
 
             updated_feature = model.message_passing(hx, normalized_trackers)  # BxH
             vel = model.vel_classifier(model.drop(updated_feature))
@@ -339,10 +345,26 @@ if __name__ == '__main__':
     print('Acc_0.75: {}'.format(Acc_75))
     print('mAcc: {}'.format(mAcc))
 
+    result_dict['metrics_all'] = [Acc_5,Acc_75,mAcc]
+    json_save_dir = os.path.join(dir_name,'ROI')
+    if not os.path.exists(json_save_dir):
+        os.makedirs(json_save_dir)
+    metric_save_dir = os.path.join(dir_name,'ROI_metric')
+    if not os.path.exists(metric_save_dir):
+        os.makedirs(metric_save_dir)
+    json_save_name = model_basename.replace('.pth','.json')
+    json_file_path = os.path.join(json_save_dir,args.cause+ '_'+ json_save_name)
+    with open(json_file_path, 'w') as f:
+        json.dump(result_dict, f,indent= 4)
 
-json_file_path = '/home/cli/sm120145_desktop/driving_model/scripts/json/'+args.cause
-if not os.path.isdir(json_file_path):
-    os.makedirs(json_file_path)
-json_file_path = json_file_path+'/ours.json'
-with open(json_file_path, 'w') as f:
-    json.dump(result_dict, f)
+    metric_save_name = model_basename.replace('.pth','.json')
+    metric_file_path = os.path.join(metric_save_dir,args.cause+ '_'+ metric_save_name)
+    with open(metric_file_path, 'w') as f:
+        json.dump([Acc_5,Acc_75,mAcc], f,indent= 4)
+
+# json_file_path = '/home/cli/sm120145_desktop/driving_model/scripts/json/'+args.cause
+# if not os.path.isdir(json_file_path):
+#     os.makedirs(json_file_path)
+# json_file_path = json_file_path+'/ours.json'
+# with open(json_file_path, 'w') as f:
+#     json.dump(result_dict, f)

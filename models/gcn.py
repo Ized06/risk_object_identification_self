@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.utils.model_zoo as model_zoo
-from .inceptionresnetv2 import InceptionResNetV2
+# from .inceptionresnetv2 import InceptionResNetV2
 from .inceptionresnetv2_partialConv import InceptionResNetV2_Partial
 from roi_align.roi_align import RoIAlign
 from roi_align.roi_align import CropAndResize
@@ -173,7 +173,7 @@ class GCN(nn.Module):
             mask = mask.view(-1, num_box) #(BxN)x1
             mask = mask!= 0
             input_feature = input_feature.view(-1, num_box, self.hidden_size ) #BxNxH
-            input_feature[~mask.byte()] = 0
+            input_feature[~mask.bool()] = 0
             ego_feature = input_feature[:, 0, :]
             updated_feature = torch.sum(input_feature, 1) / torch.sum(mask, 1 , keepdim=True).float()
 
@@ -202,7 +202,7 @@ class GCN(nn.Module):
 
             # emb_feature: (B, N, 1)
             emb_feature = self.fc_emb_2(emb_feature).view(-1, num_box, 1)
-            emb_feature[~mask.byte()] = torch.tensor([-float("Inf")])
+            emb_feature[~mask.bool()] = torch.tensor([-float("Inf")])
             '''
             if not dist_mask:
                 dist_mask = dist_mask.view(-1, num_box, 1)  # (B, N, 1)
