@@ -14,7 +14,7 @@ sys.path.insert(0, '../../../')
 import config as cfg
 import utils as utl
 from datasets import GCNDataLayer as DataLayer
-from models.gcn import GCN as Model
+from models.gcn import GCN_intention as Model
 import pdb
 
 def to_device(x, device):
@@ -41,6 +41,16 @@ if __name__ == '__main__':
     parser.add_argument('--dist', default=False, type=bool)
     parser.add_argument('--fusion', default='attn',choices=['avg', 'gcn', 'attn'], type=str)
     parser.add_argument('--topology-info-file',type=str, default='/home/zxiao/data/dataset/topology_info_w_go_straight.json')
+    parser.add_argument('--model', default='TRN', type=str)
+    parser.add_argument('--hidden_size', default=2000, type=int)
+    parser.add_argument('--camera_feature', default='resnet50_mapillary', type=str)
+    parser.add_argument('--enc_steps', default=3, type=int)
+    parser.add_argument('--dec_steps', default=5, type=int)
+    parser.add_argument('--dropout', default=0.1, type=float)
+    parser.add_argument('--num-waypoints',type=int,default=13)
+    parser.add_argument('--num-topologies',type=int,default=5)
+    parser.add_argument('--num-intention_types',type=int,default=4)
+    parser.add_argument('--dataset',type=str,default='HDD')
 
 
     args = cfg.parse_args(parser)
@@ -49,7 +59,7 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     url = 'http://data.lip6.fr/cadene/pretrainedmodels/inceptionresnetv2-520b38e4.pth'
 
-    model = Model(args.inputs, args.time_steps, partialConv = args.partial_conv, fusion = args.fusion)
+    model = Model(args.inputs, args.time_steps, partialConv = args.partial_conv, fusion = args.fusion,args=args)
     model.loadmodel(url)
     model = nn.DataParallel(model).to(device)
     print("Model Parameters:", count_parameters(model))
