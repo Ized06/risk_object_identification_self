@@ -200,7 +200,7 @@ if __name__ == '__main__':
 
             transformed_camera_inputs = []
             # without intervention
-            for l in range(st, et + 1, time_sample):
+            for l in range(st, et, time_sample):
 
                 camera_name = 'output{}.png'.format(str(l-1 + start_time))
                 camera_path = osp.join('/home/zxiao/data/ROI/roi_test', folder, camera_name)
@@ -234,6 +234,15 @@ if __name__ == '__main__':
 
                 hx, cx = model.step(feature_input, hx, cx)
 
+            # Add another frame
+            camera_name = 'output{}.png'.format(str(et-1 + start_time))
+            camera_path = osp.join('/home/zxiao/data/ROI/roi_test', folder, camera_name)
+            camera_inputs.append(Image.open(camera_path).convert('RGB'))  # save for later usage in intervention
+
+            camera_input = camera_transforms(Image.open(camera_path).convert('RGB'))
+            camera_input = np.array(camera_input)
+            camera_input = to_device(torch.from_numpy(camera_input.astype(np.float32)), device)
+            transformed_camera_inputs.append(camera_input)
             transformed_original_camera_inputs = torch.stack(transformed_camera_inputs,dim=1)
 
             trn_camera_feature = model.resnet.features(transformed_original_camera_inputs.view(-1,3,299,299))
@@ -370,10 +379,10 @@ if __name__ == '__main__':
     print('mAcc: {}'.format(mAcc))
 
     result_dict['metrics_all'] = [Acc_5,Acc_75,mAcc]
-    json_save_dir = os.path.join(dir_name,'ROI')
+    json_save_dir = os.path.join(dir_name,'ROI_2frame')
     if not os.path.exists(json_save_dir):
         os.makedirs(json_save_dir)
-    metric_save_dir = os.path.join(dir_name,'ROI_metric')
+    metric_save_dir = os.path.join(dir_name,'ROI_metric_2frame')
     if not os.path.exists(metric_save_dir):
         os.makedirs(metric_save_dir)
     json_save_name = model_basename.replace('.pth','.json')
